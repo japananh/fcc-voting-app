@@ -1,5 +1,5 @@
 {
-	"name": "fcc-image-search-abstraction",
+	"name": "fcc-voting-app",
 	"version": "0.0.1",
 	"description": "Image search abstraction project for freeCodeCamp",
 	"main": "server.js",
@@ -21,7 +21,7 @@
 	},
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/japananh/fcc-image-search"
+		"url": "https://github.com/japananh/fcc-voting-app"
 	},
 	"keywords": [
 		"node",
