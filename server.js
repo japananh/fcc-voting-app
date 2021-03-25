@@ -24,14 +24,15 @@ app.use(
         styleSrc: [
           "'self'",
           "'unsafe-inline'",
-          "https://fcc-image-search.herokuapp.com/",
+          "https://fcc-voting-app.herokuapp.com/",
         ],
         scriptSrc: [
           "'self'",
           "'unsafe-inline'",
-          "https://fcc-image-search.herokuapp.com/",
+          "https://fcc-voting-app.herokuapp.com/",
           "https://cloud.iexapis.com/",
-          "https://code.jquery.com/jquery-2.2.1.min.js",
+          "https://code.jquery.com/jquery-3.6.0.min.js",
+          "https://cdn.jsdelivr.net/npm/js-cookie@rc/dist/js.cookie.min.js",
         ],
       },
     },
@@ -46,10 +47,23 @@ app.use(
 );
 
 app.use("/public", express.static(process.cwd() + "/public"));
+// app.use("/views", express.static(process.cwd() + "/views"));
 
-//Index page (static HTML)
 app.route("/").get(function (_req, res) {
   res.sendFile(process.cwd() + "/views/index.html");
+});
+// TODO: Add midleware to all routes below
+app.route("/login").get(function (_req, res) {
+  res.sendFile(process.cwd() + "/views/login.html");
+});
+app.route("/signup").get(function (_req, res) {
+  res.sendFile(process.cwd() + "/views/signup.html");
+});
+app.route("/new-poll").get(function (_req, res) {
+  res.sendFile(process.cwd() + "/views/new-poll.html");
+});
+app.route("/polls").get(function (_req, res) {
+  res.sendFile(process.cwd() + "/views/my-polls.html");
 });
 
 //For FCC testing purposes

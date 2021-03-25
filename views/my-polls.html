@@ -15,13 +15,15 @@
   </head>
   <body>
     <header id="header">
-      <div>Welcome, <span id="username"></span></div>
+      <div>Welcome <span id="username"></span></div>
       <div id="navigation">
         <a href="/">Home</a>
       </div>
     </header>
 
-    <div id="polls">all polls are here</div>
+    <div id="polls">all MY polls are here</div>
+
+    <div id="error" class="error"></div>
 
     <!-- Your web-app is https, so your scripts need to be too -->
     <script
@@ -42,17 +44,18 @@
           $("#navigation").append('<a href="/Login">Login</a>');
         }
 
-        // TODO: get all polls
+        // TODO: get my polls
+        const userId = Cookies.get("userId");
         $.ajax({
           url: `/api/polls`,
           type: "get",
-          // data: `page=${page}`,
+          data: `user_id=${userId}`,
           success: (data) => {
             $("#polls").text(JSON.stringify(data));
           },
           error: (err) => {
             console.error("Get polls error", JSON.stringify(err));
-            alert("Server Error. Refresh the page");
+            $("#error").text("Server Error. Refresh the page");
           },
         });
 
