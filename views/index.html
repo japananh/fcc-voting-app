@@ -1,66 +1,51 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <title>Voting App</title>
-    <link
-      id="favicon"
-      rel="icon"
-      href="https://cdn.freecodecamp.org/universal/favicons/favicon-32x32.png"
-      type="image/x-icon"
-    />
-    <meta charset="utf-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link rel="stylesheet" href="/public/style.css" />
-  </head>
-  <body>
-    <header id="header">
-      <div>Welcome, <span id="username"></span></div>
-      <div id="navigation">
-        <a href="/">Home</a>
-      </div>
-    </header>
+	<head>
+		<title>Voting App</title>
+		<link
+			id="favicon"
+			rel="icon"
+			href="https://cdn.freecodecamp.org/universal/favicons/favicon-32x32.png"
+			type="image/x-icon"
+		/>
+		<meta charset="utf-8" />
+		<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<link rel="stylesheet" href="/public/style.css" />
+	</head>
+	<body>
+		<header id="header">
+			<div>Welcome<span id="username"></span></div>
+			<div id="navigation">
+				<a href="/">Home</a>
+			</div>
+		</header>
 
-    <div id="polls">all polls are here</div>
+		<div id="polls">all polls are here</div>
 
-    <!-- Your web-app is https, so your scripts need to be too -->
-    <script
-      src="https://code.jquery.com/jquery-3.6.0.min.js"
-      crossorigin="anonymous"
-    ></script>
-    <script src="https://cdn.jsdelivr.net/npm/js-cookie@rc/dist/js.cookie.min.js"></script>
-    <script>
-      $(function () {
-        user = Cookies.get("user");
-        if (user) {
-          $("#username").text(`, ${user}`);
-
-          $("#navigation").append('<a href="/my-polls">My polls</a>');
-          $("#navigation").append('<a href="/new-poll">New poll</a>');
-          $("#navigation").append('<a href="/logout">Log out</a>');
-        } else {
-          $("#navigation").append('<a href="/Login">Login</a>');
-        }
-
-        // TODO: get all polls
-        $.ajax({
-          url: `/api/polls`,
-          type: "get",
-          // data: `page=${page}`,
-          success: (data) => {
-            $("#polls").text(JSON.stringify(data));
-          },
-          error: (err) => {
-            console.error("Get polls error", JSON.stringify(err));
-            alert("Server Error. Refresh the page");
-          },
-        });
-
-        $("#logout").click((e) => {
-          Cookies.remove("token");
-          Cookies.remove("user");
-        });
-      });
-    </script>
-  </body>
+		<!-- Your web-app is https, so your scripts need to be too -->
+		<script
+			src="https://code.jquery.com/jquery-3.6.0.min.js"
+			crossorigin="anonymous"
+		></script>
+		<script src="https://cdn.jsdelivr.net/npm/js-cookie@rc/dist/js.cookie.min.js"></script>
+		<script src="/public/client.js"></script>
+		<script>
+			$(function () {
+				// TODO: get all polls
+				$.ajax({
+					url: `/api/polls`,
+					type: "get",
+					// data: `page=${page}`,
+					success: (data) => {
+						$("#polls").text(JSON.stringify(data));
+					},
+					error: (err) => {
+						console.error("Get polls error", JSON.stringify(err));
+						alert("Server Error. Refresh the page");
+					},
+				});
+			});
+		</script>
+	</body>
 </html>

@@ -1,39 +1,63 @@
 const mongoose = require("mongoose");
+const ObjectId = mongoose.Types.ObjectId;
+
 const { toJSON } = require("./plugins");
 
-const historySchema = mongoose.Schema(
-  {
-    term: {
-      type: String,
-      required: true,
-    },
-    type: {
-      type: String,
-      required: true,
-    },
-    page: {
-      type: Number,
-      required: true,
-      default: 1,
-    },
-    per_page: {
-      type: Number,
-      required: true,
-      default: 10,
-    },
-  },
-  {
-    timestamps: { createdAt: "created_at", updatedAt: "updated_at" },
-    versionKey: false,
-  }
+const userSchema = mongoose.Schema(
+	{
+		username: {
+			type: String,
+			required: true,
+			unique: true,
+		},
+		password: {
+			type: String,
+			required: true,
+		},
+	},
+	{
+		timestamps: { createdAt: "created_at", updatedAt: "updated_at" },
+		versionKey: false,
+	}
+);
+
+const pollSchema = mongoose.Schema(
+	{
+		created_by: {
+			type: ObjectId,
+			required: true,
+		},
+		question: {
+			type: String,
+			required: true,
+		},
+		options: [
+			{
+				name: {
+					type: String,
+					required: true,
+				},
+				votes: [
+					{
+						type: ObjectId,
+						required: true,
+						default: [],
+					},
+				],
+			},
+		],
+	},
+	{
+		timestamps: { createdAt: "created_at", updatedAt: "updated_at" },
+		versionKey: false,
+	}
 );
 
 // add plugin that converts mongoose to json
-historySchema.plugin(toJSON);
+userSchema.plugin(toJSON);
+pollSchema.plugin(toJSON);
 
-/**
- * @typedef History
- */
-const History = mongoose.model("History", historySchema);
+const User = mongoose.model("User", userSchema);
+const Poll = mongoose.model("Poll", pollSchema);
 
-module.exports = History;
+module.exports = { User, Poll };
