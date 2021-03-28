@@ -26,9 +26,21 @@ module.exports = function routes(app) {
 	app.get("/api/polls", pollController.getPolls);
 
 	app.get(
-		"/api/polls/:userId",
-		validate(pollValidation.getUserPolls),
-		pollController.getUserPolls
+		"/api/polls/:id",
+		validate(pollValidation.getPoll),
+		pollController.getPoll
+	);
+
+	app.put(
+		"/api/polls/:id",
+		validate(pollValidation.updatePoll),
+		pollController.updatePoll
+	);
+
+	app.delete(
+		"/api/polls/:id",
+		validate(pollValidation.deletePoll),
+		pollController.deletePoll
 	);
 
 	app.post(
@@ -37,4 +49,3 @@ module.exports = function routes(app) {
 		pollController.createPoll
 	);
 };
-	

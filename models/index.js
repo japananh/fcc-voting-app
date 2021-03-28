@@ -1,9 +1,10 @@
 const mongoose = require("mongoose");
-const ObjectId = mongoose.Types.ObjectId;
+const Schema = mongoose.Schema;
+const ObjectId = Schema.Types.ObjectId;
 
 const { toJSON } = require("./plugins");
 
-const userSchema = mongoose.Schema(
+const userSchema = Schema(
 	{
 		username: {
 			type: String,
@@ -21,11 +22,12 @@ const userSchema = mongoose.Schema(
 	}
 );
 
-const pollSchema = mongoose.Schema(
+const pollSchema = Schema(
 	{
 		created_by: {
 			type: ObjectId,
 			required: true,
+			ref: "User",
 		},
 		question: {
 			type: String,
@@ -40,8 +42,7 @@ const pollSchema = mongoose.Schema(
 				votes: [
 					{
 						type: ObjectId,
-						required: true,
-						default: [],
+						ref: "User",
 					},
 				],
 			},

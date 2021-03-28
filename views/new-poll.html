@@ -57,10 +57,10 @@
 					$.ajax({
 						url: `/api/polls`,
 						type: "post",
-						data: `${$("#form").serialize()}&userId=${userId}`,
+						data: `${$("#form").serialize()}&user_id=${userId}`,
 						success: (data) => {
-							if (data) {
-								document.location.href = "../polls";
+							if (data && !data.error) {
+								document.location.href = `../polls/${data.id}`;
 							} else {
 								$("#error").text(
 									"Server Error. Refresh the page"
@@ -76,8 +76,6 @@
 						},
 					});
 				});
-
-				
 			});
 		</script>
 	</body>

@@ -1,185 +1,299 @@
 const chaiHttp = require("chai-http");
 const chai = require("chai");
 const assert = chai.assert;
+const ObjectID = require("mongoose").Types.ObjectId;
+
 const server = require("../server");
-const History = require("../models");
+const { Poll, User } = require("../models");
 
 chai.use(chaiHttp);
 
 suite("Functional Tests", function () {
-  before((done) => {
-    // Handle error when collection does not exist
-    try {
-      History.collection.drop();
-    } catch (err) {
-      console.error(JSON.stringify(err));
-    }
+	after((done) => {
+		Poll.collection.drop();
+		User.collection.drop();
+		done();
+	});
 
-    done();
-  });
+	const username = `username-${new Date().getTime()}`;
+	const password = `password${new Date().getTime()}`;
+	let userId = "";
 
-  after((done) => {
-    History.collection.drop();
-    done();
-  });
+	suite("Test authentication requests", () => {
+		test("POST request to /api/auth/signup with valid username and password", (done) => {
+			chai.request(server)
+				.post(`/api/auth/signup`)
+				.send({
+					username,
+					password,
+				})
+				.end((_err, res) => {
+					assert.equal(res.status, 200);
+					assert.isObject(res.body, "response should be an object");
+					assert.containsAllKeys(
+						res.body,
+						["username", "created_at", "updated_at", "id"],
+						"response should contain all keys"
+					);
+					assert.exists(
+						res.body.password,
+						false,
+						"response should not contains password field"
+					);
 
-  suite("Test GET request to /api/images/${term}", () => {
-    const term = `cat-${new Date().getTime()}`;
-    const defaultItemPerPage = 10;
+					userId = res.body.id;
 
-    test("GET request to /api/images/${term} with a default page", (done) => {
-      chai
-        .request(server)
-        .get(`/api/images/${term}`)
-        .end((_err, res) => {
-          assert.equal(res.status, 200);
-          assert.isObject(res.body, "response should be an object");
-          assert.isAtLeast(res.body.total, 0, "total should be at least 0");
-          assert.isAtLeast(
-            res.body.total_pages,
-            0,
-            "total_pages should be at least 0"
-          );
-          assert.isArray(
-            res.body.images,
-            "response should have a property images as an array"
-          );
-          assert.isAtMost(
-            res.body.images.length,
-            defaultItemPerPage,
-            `images should have at most ${defaultItemPerPage}`
-          );
+					done();
+				});
+		});
 
-          if (res.body.images.length) {
-            res.body.images.forEach((image) => {
-              assert.containsAllKeys(image, [
-                "id",
-                "created_at",
-                "updated_at",
-                "promoted_at",
-                "width",
-                "height",
-                "color",
-                "description",
-                "urls",
-                "categories",
-                "likes",
-              ]);
-            });
-          }
+		test("POST request to /api/auth/signup with duplicate username", (done) => {
+			chai.request(server)
+				.post(`/api/auth/signup`)
+				.send({
+					username,
+					password,
+				})
+				.end((_err, res) => {
+					assert.equal(res.status, 409);
+					assert.isObject(res.body, "response should be an object");
+					assert.equal(
+						res.body.message,
+						"User already existed",
+						"response should have error message"
+					);
 
-          done();
-        });
-    });
+					done();
+				});
+		});
 
-    test("GET request to /api/images/${term} with a valid page", (done) => {
-      chai
-        .request(server)
-        .get(`/api/images/${term}`)
-        .query({ page: 2 })
-        .end((_err, res) => {
-          assert.equal(res.status, 200);
-          assert.isObject(res.body, "response should be an object");
-          assert.isAtLeast(res.body.total, 0, "total should be at least 0");
-          assert.isAtLeast(
-            res.body.total_pages,
-            0,
-            "total_pages should be at least 0"
-          );
-          assert.isArray(
-            res.body.images,
-            "response should have a property images as an array"
-          );
-          assert.isAtMost(
-            res.body.images.length,
-            defaultItemPerPage,
-            `images should have at most ${defaultItemPerPage}`
-          );
+		test("POST request to /api/auth/login with correct username and password", (done) => {
+			chai.request(server)
+				.post(`/api/auth/login`)
+				.send({
+					username,
+					password,
+				})
+				.end((_err, res) => {
+					assert.equal(res.status, 200);
+					assert.isObject(res.body, "response should be an object");
+					assert.containsAllKeys(
+						res.body,
+						["username", "created_at", "updated_at", "id"],
+						"response should contain all keys"
+					);
+					assert.exists(
+						res.body.password,
+						false,
+						"response should not contains password field"
+					);
 
-          if (res.body.images.length) {
-            res.body.images.forEach((image) => {
-              assert.containsAllKeys(image, [
-                "id",
-                "created_at",
-                "updated_at",
-                "promoted_at",
-                "width",
-                "height",
-                "color",
-                "description",
-                "urls",
-                "categories",
-                "likes",
-              ]);
-            });
-          }
+					done();
+				});
+		});
 
-          done();
-        });
-    });
+		test("POST request to /api/auth/login with incorrect username and correct password", (done) => {
+			chai.request(server)
+				.post(`/api/auth/login`)
+				.send({
+					username: `user-${new Date().getTime()}`,
+					password,
+				})
+				.end((_err, res) => {
+					assert.equal(res.status, 400);
+					assert.isObject(res.body, "response should be an object");
+					assert.equal(
+						res.body.message,
+						"Incorrect username or password",
+						"response should have error message"
+					);
 
-    test("GET request to /api/images/${term} with an negative page", (done) => {
-      chai
-        .request(server)
-        .get(`/api/images/${term}`)
-        .query({ page: -1 })
-        .end((_err, res) => {
-          assert.equal(res.status, 200);
-          assert.isObject(res.body, "response should be an object");
-          assert.equal(
-            res.body.error,
-            "Invalid input",
-            "response should return error"
-          );
+					done();
+				});
+		});
 
-          done();
-        });
-    });
+		test("POST request to /api/auth/login with correct username and incorrect password", (done) => {
+			chai.request(server)
+				.post(`/api/auth/login`)
+				.send({
+					username,
+					password: "incorrectpassword",
+				})
+				.end((_err, res) => {
+					assert.equal(res.status, 400);
+					assert.isObject(res.body, "response should be an object");
+					assert.equal(
+						res.body.message,
+						"Incorrect username or password",
+						"response should have error message"
+					);
 
-    test("GET request to /api/images/${term} with an invalid page", (done) => {
-      chai
-        .request(server)
-        .get(`/api/images/${term}`)
-        .query({ page: "1a" })
-        .end((_err, res) => {
-          assert.equal(res.status, 200);
-          assert.isObject(res.body, "response should be an object");
-          assert.equal(
-            res.body.error,
-            "Invalid input",
-            "response should return error"
-          );
+					done();
+				});
+		});
+	});
 
-          done();
-        });
-    });
-  });
+	suite("Test requests to /api/polls", () => {
+		let pollId = "";
+		const question = "What is the most favorite programming language?";
+		const options = ["JavaScript", "Python", "Java", "Go", "Ruby"];
 
-  suite("Test GET request to /api/recent", () => {
-    test("Viewing all recent queries", (done) => {
-      chai
-        .request(server)
-        .get(`/api/recent/images`)
-        .end((_err, res) => {
-          assert.equal(res.status, 200);
-          assert.isArray(res.body, "response should be an array");
+		test("Create a poll with valid fields, POST request to /api/polls", (done) => {
+			chai.request(server)
+				.post(`/api/polls`)
+				.send({
+					user_id: userId,
+					question,
+					options: options.join(","),
+				})
+				.end((_err, res) => {
+					assert.equal(res.status, 200);
+					assert.isObject(res.body, "response should be an object");
 
-          if (res.body.length) {
-            res.body.forEach((item) => {
-              assert.containsAllKeys(item, [
-                "term",
-                "type",
-                "created_at",
-                "updated_at",
-                "id",
-                "page",
-                "per_page",
-              ]);
-            });
-          }
+					assert.containsAllKeys(res.body, [
+						"created_by",
+						"question",
+						"created_at",
+						"updated_at",
+						"id",
+						"options",
+					]);
 
-          done();
-        });
-    });
-  });
+					assert.isArray(
+						res.body.options,
+						"options should be an array"
+					);
+
+					pollId = res.body.id;
+
+					done();
+				});
+		});
+
+		test("Create a poll with missing fields, POST request to /api/polls", (done) => {
+			chai.request(server)
+				.post(`/api/polls`)
+				.send({
+					user_id: userId,
+					question,
+				})
+				.end((_err, res) => {
+					assert.equal(res.status, 400);
+					assert.isObject(res.body, "response should be an object");
+
+					done();
+				});
+		});
+
+		test("Get all polls, GET request to /api/polls", (done) => {
+			chai.request(server)
+				.get(`/api/polls`)
+				.end((_err, res) => {
+					assert.equal(res.status, 200);
+					assert.isArray(res.body, "response should be an array");
+
+					if (res.body.length) {
+						res.body.forEach((item) => {
+							assert.containsAllKeys(item, [
+								"created_by",
+								"question",
+								"created_at",
+								"updated_at",
+								"id",
+								"options",
+							]);
+						});
+					}
+
+					done();
+				});
+		});
+
+		test("Get all polls that are created by a user, GET request to /api/polls", (done) => {
+			chai.request(server)
+				.get(`/api/polls`)
+				.query({ user_id: userId })
+				.end((_err, res) => {
+					assert.equal(res.status, 200);
+					assert.isArray(res.body, "response should be an array");
+
+					if (res.body.length) {
+						res.body.forEach((item) => {
+							assert.containsAllKeys(item, [
+								"created_by",
+								"question",
+								"created_at",
+								"updated_at",
+								"id",
+								"options",
+							]);
+							assert.containsAllKeys(
+								item.created_by,
+								["id", "username"],
+								"created_by should contain id and username keys"
+							);
+							assert.equal(
+								item.created_by.id,
+								userId,
+								"all polls should have the same user_id"
+							);
+						});
+					}
+
+					done();
+				});
+		});
+
+		test("Get a poll, GET request to /api/polls/:id", (done) => {
+			chai.request(server)
+				.get(`/api/polls/${pollId}`)
+				.end((_err, res) => {
+					assert.equal(res.status, 200);
+					assert.isObject(res.body, "response should be an object");
+
+					assert.containsAllKeys(res.body, [
+						"created_by",
+						"question",
+						"created_at",
+						"updated_at",
+						"id",
+						"options",
+					]);
+
+					done();
+				});
+		});
+
+		test("Delete a poll with an invalid poll id, DELETE request to /api/polls/:id", (done) => {
+			const invalidId = ObjectID().toString();
+
+			chai.request(server)
+				.delete(`/api/polls/${invalidId}`)
+				.end((_err, res) => {
+					assert.equal(res.status, 404);
+					assert.deepEqual(
+						res.body.message,
+						"Poll not found",
+						"response should return error message"
+					);
+
+					done();
+				});
+		});
+
+		test("Delete a poll with a valid poll id, DELETE request to /api/polls/:id", (done) => {
+			chai.request(server)
+				.delete(`/api/polls/${pollId}`)
+				.end((_err, res) => {
+					assert.equal(res.status, 200);
+					assert.deepEqual(
+						res.body,
+						"success",
+						"response should return success"
+					);
+
+					done();
+				});
+		});
+	});
 });

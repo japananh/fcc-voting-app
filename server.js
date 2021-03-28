@@ -68,6 +68,9 @@ app.route("/new-poll").get(function (_req, res) {
 app.route("/polls").get(function (_req, res) {
 	res.sendFile(process.cwd() + "/views/my-polls.html");
 });
+app.route("/polls/:id").get(function (_req, res) {
+	res.sendFile(process.cwd() + "/views/poll.html");
+});
 
 //For FCC testing purposes
 fccTestingRoutes(app);
